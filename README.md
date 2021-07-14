@@ -4,18 +4,22 @@ A candlestick chart that supports pinch-to-zoom and panning.
 
 ## Dark mode
 
-![pan](./example/demo_gifs/dark.gif)
+![pan](https://raw.githubusercontent.com/fluttercandies/flutter-interactive-chart/master/example/demo_gifs/dark.gif)
 
 ## Pan
 
-![pan](./example/demo_gifs/pan.gif)
+![pan](https://raw.githubusercontent.com/fluttercandies/flutter-interactive-chart/master/example/demo_gifs/pan.gif)
 
 
 ## Pinch-to-zoom
 
-![pan](./example/demo_gifs/zoom.gif)
+![zoom](https://raw.githubusercontent.com/fluttercandies/flutter-interactive-chart/master/example/demo_gifs/zoom.gif)
 
 
 ## Overlay
 
-![pan](./example/demo_gifs/overlay.gif)
+![overlay](https://raw.githubusercontent.com/fluttercandies/flutter-interactive-chart/master/example/demo_gifs/overlay.gif)
+
+## Customize styles
+
+![style](https://raw.githubusercontent.com/fluttercandies/flutter-interactive-chart/master/example/demo_gifs/style.png)
