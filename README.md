@@ -22,4 +22,4 @@ A candlestick chart that supports pinch-to-zoom and panning.
 
 ## Customize styles
 
-![style](https://raw.githubusercontent.com/fluttercandies/flutter-interactive-chart/master/example/demo_gifs/style.png)
+![style](https://raw.githubusercontent.com/fluttercandies/flutter-interactive-chart/master/example/demo_gifs/style.gif)
