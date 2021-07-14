@@ -1,19 +1,20 @@
 import 'dart:math';
-import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import 'candle_data.dart';
 import 'chart_painter.dart';
+import 'chart_style.dart';
 import 'painter_params.dart';
 
 class InteractiveChart extends StatefulWidget {
   final List<CandleData> candles;
+  final ChartStyle style;
 
-  const InteractiveChart({Key? key, required this.candles})
-      : assert(candles.length >= 3,
-            "InteractiveChart requires at least 3 data points"),
+  const InteractiveChart({Key? key, required this.candles, ChartStyle? style})
+      : this.style = style ?? const ChartStyle(),
+        assert(candles.length >= 3,
+            "InteractiveChart requires 3 or more CandleData"),
         super(key: key);
 
   @override
@@ -27,7 +28,7 @@ class _InteractiveChartState extends State<InteractiveChart> {
   // The x offset (in px) of current visible chart window,
   // measured against the beginning of the chart.
   // i.e. a value of 0.0 means we are displaying data for the very first day,
-  // and a value of 2 * _candleWidth would be skipping the first 2 days.
+  // and a value of 20 * _candleWidth would be skipping the first 20 days.
   late double _startOffset;
 
   // The position that user is currently tapping, null if user let go.
@@ -43,7 +44,7 @@ class _InteractiveChartState extends State<InteractiveChart> {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         final size = constraints.biggest;
-        final w = size.width - PainterParams.priceLabelWidth;
+        final w = size.width - widget.style.priceLabelWidth;
         _handleResize(w);
 
         // Find the visible data range
@@ -52,17 +53,24 @@ class _InteractiveChartState extends State<InteractiveChart> {
         final int end = (start + count).clamp(start, widget.candles.length);
         final candlesInRange = widget.candles.getRange(start, end).toList();
         if (end < widget.candles.length) {
+          // Put in an extra item, since it can become visible when scrolling
           final nextItem = widget.candles[end];
           candlesInRange.add(nextItem);
         }
 
-        // If possible, find neighbouring "moving average" data,
+        // If possible, find neighbouring trend line data,
         // so the chart could draw better-connected lines
-        final maLeading = widget.candles.at(start - 1)?.priceMA;
-        final maTrailing = widget.candles.at(end + 1)?.priceMA;
+        final leadingTrend = widget.candles.at(start - 1)?.trend;
+        final trailingTrend = widget.candles.at(end + 1)?.trend;
 
-        // Find the horizontal shift needed when drawing the candles
-        final xShift = _candleWidth / 2 - (_startOffset - start * _candleWidth);
+        // Find the horizontal shift needed when drawing the candles.
+        // First, always shift the chart by half a candle, because when we
+        // draw a line using a thick paint, it spreads to both sides.
+        // Then, we find out how much "fraction" of a candle is visible, since
+        // when users scroll, they don't always stop at exact intervals.
+        final halfCandle = _candleWidth / 2;
+        final fractionCandle = _startOffset - start * _candleWidth;
+        final xShift = halfCandle - fractionCandle;
 
         // Calculate min and max among the visible data
         final maxPrice =
@@ -92,6 +100,7 @@ class _InteractiveChartState extends State<InteractiveChart> {
             tween: PainterParamsTween(
               end: PainterParams(
                 candles: candlesInRange,
+                style: widget.style,
                 size: size,
                 candleWidth: _candleWidth,
                 startOffset: _startOffset,
@@ -101,15 +110,14 @@ class _InteractiveChartState extends State<InteractiveChart> {
                 minVol: minVol,
                 xShift: xShift,
                 tapPosition: _tapPosition,
-                maLeading: maLeading,
-                maTrailing: maTrailing,
+                leadingTrend: leadingTrend,
+                trailingTrend: trailingTrend,
               ),
             ),
             // duration: Duration.zero,
             duration: Duration(milliseconds: 300),
             curve: Curves.easeOut,
-            builder:
-                (BuildContext context, PainterParams params, Widget? child) {
+            builder: (_, PainterParams params, __) {
               return CustomPaint(
                 size: size,
                 painter: ChartPainter(params),
@@ -124,22 +132,19 @@ class _InteractiveChartState extends State<InteractiveChart> {
   _onScaleUpdate(details, double w) {
     // Handle zoom
     final candleWidth = (_prevCandleWidth * details.scale)
-        .clamp(_getMaxCandleWidth(w), _getMinCandleWidth(w));
+        .clamp(_getMinCandleWidth(w), _getMaxCandleWidth(w));
     final clampedScale = candleWidth / _prevCandleWidth;
     var startOffset = _prevStartOffset * clampedScale;
     // Handle pan
     final dx = (details.localFocalPoint - _initialFocalPoint).dx * -1;
     startOffset += dx;
     // Adjust pan when zooming
-    final focalPointFactor = details.localFocalPoint.dx / w;
     final double prevCount = w / _prevCandleWidth;
     final double currCount = w / _candleWidth;
     final zoomAdjustment = (currCount - prevCount) * _candleWidth;
+    final focalPointFactor = details.localFocalPoint.dx / w;
     startOffset -= zoomAdjustment * focalPointFactor;
-    startOffset = startOffset.clamp(
-      0,
-      _getMaxStartOffset(w, candleWidth),
-    );
+    startOffset = startOffset.clamp(0, _getMaxStartOffset(w, candleWidth));
     // Apply changes
     setState(() {
       _candleWidth = candleWidth;
@@ -152,8 +157,8 @@ class _InteractiveChartState extends State<InteractiveChart> {
     if (_prevChartWidth != null) {
       // Re-clamp when size changes (e.g. screen rotation)
       _candleWidth = _candleWidth.clamp(
-        _getMaxCandleWidth(w),
         _getMinCandleWidth(w),
+        _getMaxCandleWidth(w),
       );
       _startOffset = _startOffset.clamp(
         0,
@@ -169,10 +174,13 @@ class _InteractiveChartState extends State<InteractiveChart> {
     _prevChartWidth = w;
   }
 
-  double _getMaxCandleWidth(double w) => w / widget.candles.length;
+  // The narrowest candle width, i.e. when drawing all available data points.
+  double _getMinCandleWidth(double w) => w / widget.candles.length;
 
-  double _getMinCandleWidth(double w) => w / min(14, widget.candles.length);
+  // The widest candle width, e.g. when drawing 14 day chart
+  double _getMaxCandleWidth(double w) => w / min(14, widget.candles.length);
 
+  // Max start offset: how far can we scroll towards the end of the chart
   double _getMaxStartOffset(double w, double candleWidth) {
     final count = w / candleWidth; // visible candles in the window
     final start = widget.candles.length - count;

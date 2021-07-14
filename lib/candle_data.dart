@@ -6,7 +6,7 @@ class CandleData {
   final double? close;
   final double? volume;
 
-  double? priceMA; // moving average of [close]
+  double? trend; // data point for drawing trend line, e.g. moving average
 
   CandleData({
     required this.timestamp,
@@ -19,21 +19,22 @@ class CandleData {
 
   static void computeMA(List<CandleData> data, [int period = 7]) {
     if (data.length < period * 2) return;
-    final first = data.take(period).map((d) => d.close).whereType<double>();
-    double ma = first.reduce((a, b) => a + b) / first.length;
+    final firstPeriod =
+        data.take(period).map((d) => d.close).whereType<double>();
+    double ma = firstPeriod.reduce((a, b) => a + b) / firstPeriod.length;
 
     for (int i = period; i < data.length; i++) {
       final curr = data[i].close;
       final prev = data[i - period].close;
       if (curr != null && prev != null) {
         ma = (ma * period + curr - prev) / period;
-        data[i].priceMA = ma;
+        data[i].trend = ma;
       }
     }
   }
 
   static void deleteMA(List<CandleData> data) {
-    data.forEach((element) => element.priceMA = null);
+    data.forEach((element) => element.trend = null);
   }
 
   @override

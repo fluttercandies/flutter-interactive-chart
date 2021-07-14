@@ -1,15 +1,13 @@
 import 'dart:ui';
+import 'package:flutter/widgets.dart';
+import 'package:intl/intl.dart' as intl;
 
-import 'package:flutter/material.dart';
-
+import 'chart_style.dart';
 import 'candle_data.dart';
 
 class PainterParams {
-  static const double volumeHeightFactor = 0.2;
-  static const double priceLabelWidth = 48.0;
-  static const double dateLabelHeight = 24.0;
-
   final List<CandleData> candles;
+  final ChartStyle style;
   final Size size;
   final double candleWidth;
   final double startOffset;
@@ -18,14 +16,15 @@ class PainterParams {
   final double minPrice;
   final double maxVol;
   final double minVol;
-  final double xShift;
 
+  final double xShift;
   final Offset? tapPosition;
-  final double? maLeading;
-  final double? maTrailing;
+  final double? leadingTrend;
+  final double? trailingTrend;
 
   PainterParams({
     required this.candles,
+    required this.style,
     required this.size,
     required this.candleWidth,
     required this.startOffset,
@@ -35,14 +34,17 @@ class PainterParams {
     required this.minVol,
     required this.xShift,
     required this.tapPosition,
-    required this.maLeading,
-    required this.maTrailing,
+    required this.leadingTrend,
+    required this.trailingTrend,
   });
 
-  double get chartWidth => size.width - priceLabelWidth; // width w/o labels
-  double get chartHeight => size.height - dateLabelHeight; // height w/o labels
+  double get chartWidth => // width without price labels
+      size.width - style.priceLabelWidth;
 
-  double get volumeHeight => chartHeight * PainterParams.volumeHeightFactor;
+  double get chartHeight => // height without date labels
+      size.height - style.dateLabelHeight;
+
+  double get volumeHeight => chartHeight * style.volumeHeightFactor;
 
   double get priceHeight => chartHeight - volumeHeight;
 
@@ -63,11 +65,43 @@ class PainterParams {
     return volumeHeight - vol + priceHeight - baseAmount;
   }
 
+  String getDateLabel(int timestamp, int visibleDataCount) {
+    final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000)
+        .toIso8601String()
+        .split("T")
+        .first
+        .split("-");
+
+    if (visibleDataCount > 20) {
+      // If more than 20 data points are visible, we should show year and month.
+      return "${date[0]}-${date[1]}"; // yyyy-mm
+    } else {
+      // Otherwise, we should show month and date.
+      return "${date[1]}-${date[2]}"; // mm-dd
+    }
+  }
+
+  String getPriceLabel(double price) => price.toStringAsFixed(2);
+
+  Map<String, String> getOverlayInfo(CandleData candle) {
+    final date = intl.DateFormat.yMMMd()
+        .format(DateTime.fromMillisecondsSinceEpoch(candle.timestamp * 1000));
+    return {
+      "Date": date,
+      "Open": candle.open?.toStringAsFixed(2) ?? "-",
+      "High": candle.high?.toStringAsFixed(2) ?? "-",
+      "Low": candle.low?.toStringAsFixed(2) ?? "-",
+      "Close": candle.close?.toStringAsFixed(2) ?? "-",
+      "Volume": candle.volume?.asAbbreviated() ?? "-",
+    };
+  }
+
   static PainterParams lerp(PainterParams a, PainterParams b, double t) {
     double lerpField(double getField(PainterParams p)) =>
         lerpDouble(getField(a), getField(b), t)!;
     return PainterParams(
       candles: b.candles,
+      style: b.style,
       size: b.size,
       candleWidth: b.candleWidth,
       startOffset: b.startOffset,
@@ -77,8 +111,8 @@ class PainterParams {
       minVol: lerpField((p) => p.minVol),
       xShift: b.xShift,
       tapPosition: b.tapPosition,
-      maLeading: b.maLeading,
-      maTrailing: b.maTrailing,
+      leadingTrend: b.leadingTrend,
+      trailingTrend: b.trailingTrend,
     );
   }
 }
@@ -91,4 +125,20 @@ class PainterParamsTween extends Tween<PainterParams> {
 
   @override
   PainterParams lerp(double t) => PainterParams.lerp(begin ?? end!, end!, t);
+}
+
+extension Formatting on double {
+  String asPercent() {
+    final format = this < 100 ? "##0.00" : "#,###";
+    final v = intl.NumberFormat(format, "en_US").format(this);
+    return "${this >= 0 ? '+' : ''}$v%";
+  }
+
+  String asAbbreviated() {
+    if (this < 1000) return this.toStringAsFixed(3);
+    if (this >= 1e18) return this.toStringAsExponential(3);
+    final s = intl.NumberFormat("#,###", "en_US").format(this).split(",");
+    const suffixes = ["K", "M", "B", "T", "Q"];
+    return "${s[0]}.${s[1]}${suffixes[s.length - 2]}";
+  }
 }

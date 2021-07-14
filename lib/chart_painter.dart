@@ -1,7 +1,6 @@
 import 'dart:math';
 
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart' as intl;
+import 'package:flutter/widgets.dart';
 
 import 'candle_data.dart';
 import 'painter_params.dart';
@@ -17,7 +16,7 @@ class ChartPainter extends CustomPainter {
     _drawDateLabels(canvas, params);
     _drawPriceGridAndLabels(canvas, params);
 
-    // Draw prices, volumes & moving averages
+    // Draw prices, volumes & trend line
     canvas.save();
     canvas.clipRect(Offset.zero & Size(params.chartWidth, params.chartHeight));
     // canvas.drawRect(
@@ -40,19 +39,7 @@ class ChartPainter extends CustomPainter {
   }
 
   void _drawDateLabels(canvas, PainterParams params) {
-    final count = params.candles.length;
-
-    String getDate(int timestamp) {
-      final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000)
-          .toIso8601String()
-          .split("T")
-          .first
-          .split("-");
-
-      if (count < 20) return "${date[1]}-${date[2]}"; // mm-dd
-      return "${date[0]}-${date[1]}"; // yyyy-mm
-    }
-
+    // We draw one date label per 90 pixels of screen width
     final lineCount = params.chartWidth ~/ 90;
     final gap = 1 / (lineCount + 1);
     for (int i = 1; i <= lineCount; i++) {
@@ -60,13 +47,11 @@ class ChartPainter extends CustomPainter {
       final index = params.getCandleIndexFromOffset(x);
       if (index < params.candles.length) {
         final candle = params.candles[index];
+        final visibleDataCount = params.candles.length;
         final dateTp = TextPainter(
           text: TextSpan(
-            text: getDate(candle.timestamp),
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-            ),
+            text: params.getDateLabel(candle.timestamp, visibleDataCount),
+            style: params.style.dateLabelStyle,
           ),
         )
           ..textDirection = TextDirection.ltr
@@ -85,15 +70,12 @@ class ChartPainter extends CustomPainter {
         Offset(params.chartWidth, params.fitPrice(y)),
         Paint()
           ..strokeWidth = 0.5
-          ..color = Colors.grey.withOpacity(1.0),
+          ..color = params.style.priceGridLineColor,
       );
       final priceTp = TextPainter(
         text: TextSpan(
-          text: y.toStringAsFixed(2),
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey,
-          ),
+          text: params.getPriceLabel(y),
+          style: params.style.priceLabelStyle,
         ),
       )
         ..textDirection = TextDirection.ltr
@@ -112,17 +94,15 @@ class ChartPainter extends CustomPainter {
     final x = i * params.candleWidth;
     final thickWidth = max(params.candleWidth * 0.8, 0.8);
     final thinWidth = max(params.candleWidth * 0.2, 0.2);
-    final maPaint = Paint() // paint used for moving average
-      ..strokeWidth = 2.0
-      ..strokeCap = StrokeCap.round
-      ..color = Colors.blue;
     // Draw price bar
     final open = candle.open;
     final close = candle.close;
     final high = candle.high;
     final low = candle.low;
-    if (open != null && close != null && high != null && low != null) {
-      final color = open > close ? Colors.red : Colors.green;
+    if (open != null && close != null) {
+      final color = open > close
+          ? params.style.priceLossColor
+          : params.style.priceGainColor;
       canvas.drawLine(
         Offset(x, params.fitPrice(open)),
         Offset(x, params.fitPrice(close)),
@@ -130,13 +110,15 @@ class ChartPainter extends CustomPainter {
           ..strokeWidth = thickWidth
           ..color = color,
       );
-      canvas.drawLine(
-        Offset(x, params.fitPrice(high)),
-        Offset(x, params.fitPrice(low)),
-        Paint()
-          ..strokeWidth = thinWidth
-          ..color = color,
-      );
+      if (high != null && low != null) {
+        canvas.drawLine(
+          Offset(x, params.fitPrice(high)),
+          Offset(x, params.fitPrice(low)),
+          Paint()
+            ..strokeWidth = thinWidth
+            ..color = color,
+        );
+      }
     }
     // Draw volume bar
     final volume = candle.volume;
@@ -146,35 +128,42 @@ class ChartPainter extends CustomPainter {
         Offset(x, params.fitVolume(volume)),
         Paint()
           ..strokeWidth = thickWidth
-          ..color = Colors.grey,
+          ..color = params.style.volumeColor,
       );
     }
-    // Draw average line
-    final ma = candle.priceMA;
-    final prevMa = params.candles.at(i - 1)?.priceMA;
-    if (ma != null && prevMa != null) {
+    // Draw trend line
+    final trendLinePaint = Paint()
+      ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round
+      ..color = params.style.trendLineColor;
+    final pt = candle.trend; // current data point
+    final prevPt = params.candles.at(i - 1)?.trend;
+    if (pt != null && prevPt != null) {
       canvas.drawLine(
-        Offset(x - params.candleWidth, params.fitPrice(prevMa)),
-        Offset(x, params.fitPrice(ma)),
-        maPaint,
+        Offset(x - params.candleWidth, params.fitPrice(prevPt)),
+        Offset(x, params.fitPrice(pt)),
+        trendLinePaint,
       );
     }
     if (i == 0) {
       // In the front, draw an extra line connecting to out-of-window data
-      if (ma != null && params.maLeading != null) {
+      if (pt != null && params.leadingTrend != null) {
         canvas.drawLine(
-          Offset(x - params.candleWidth, params.fitPrice(params.maLeading!)),
-          Offset(x, params.fitPrice(ma)),
-          maPaint,
+          Offset(x - params.candleWidth, params.fitPrice(params.leadingTrend!)),
+          Offset(x, params.fitPrice(pt)),
+          trendLinePaint,
         );
       }
     } else if (i == params.candles.length - 1) {
       // At the end, draw an extra line connecting to out-of-window data
-      if (ma != null && params.maTrailing != null) {
+      if (pt != null && params.trailingTrend != null) {
         canvas.drawLine(
-          Offset(x, params.fitPrice(ma)),
-          Offset(x + params.candleWidth, params.fitPrice(params.maTrailing!)),
-          maPaint,
+          Offset(x, params.fitPrice(pt)),
+          Offset(
+            x + params.candleWidth,
+            params.fitPrice(params.trailingTrend!),
+          ),
+          trendLinePaint,
         );
       }
     }
@@ -192,42 +181,28 @@ class ChartPainter extends CustomPainter {
         Offset(i * params.candleWidth, params.chartHeight),
         Paint()
           ..strokeWidth = max(params.candleWidth * 0.88, 1.0)
-          ..color = Colors.grey.withOpacity(0.2));
+          ..color = params.style.selectionHighlightColor);
     canvas.restore();
     // Draw info pane
     _drawTapInfoOverlay(canvas, params, candle);
   }
 
   void _drawTapInfoOverlay(canvas, PainterParams params, CandleData candle) {
-    final Color textColor = Colors.grey[200]!;
-    final Color panelBgColor = Colors.grey[600]!.withOpacity(0.9);
     final xGap = 8.0;
     final yGap = 4.0;
 
     TextPainter makeTP(String text) => TextPainter(
           text: TextSpan(
             text: text,
-            style: TextStyle(
-              fontSize: 16,
-              color: textColor,
-            ),
+            style: params.style.overlayTextStyle,
           ),
         )
           ..textDirection = TextDirection.ltr
           ..layout();
 
-    final labels = ["Date", "Open", "High", "Low", "Close", "Volume"]
-        .map((text) => makeTP(text))
-        .toList();
-    final values = [
-      intl.DateFormat.yMMMd()
-          .format(DateTime.fromMillisecondsSinceEpoch(candle.timestamp * 1000)),
-      candle.open?.toStringAsFixed(2) ?? "-",
-      candle.high?.toStringAsFixed(2) ?? "-",
-      candle.low?.toStringAsFixed(2) ?? "-",
-      candle.close?.toStringAsFixed(2) ?? "-",
-      candle.volume?.asAbbreviated() ?? "-",
-    ].map((text) => makeTP(text)).toList();
+    final info = params.getOverlayInfo(candle);
+    final labels = info.keys.map((text) => makeTP(text)).toList();
+    final values = info.values.map((text) => makeTP(text)).toList();
 
     final labelsMaxWidth = labels.map((tp) => tp.width).reduce(max);
     final valuesMaxWidth = values.map((tp) => tp.width).reduce(max);
@@ -257,7 +232,7 @@ class ChartPainter extends CustomPainter {
           Offset.zero & Size(panelWidth, panelHeight),
           Radius.circular(8),
         ),
-        Paint()..color = panelBgColor);
+        Paint()..color = params.style.overlayBackgroundColor);
     for (int i = 0; i < labels.length; i++) {
       labels[i].paint(
         canvas,
@@ -277,22 +252,6 @@ class ChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(ChartPainter oldDelegate) => true;
-}
-
-extension Formatting on double {
-  String asPercent() {
-    final format = this < 100 ? "##0.00" : "#,###";
-    final v = intl.NumberFormat(format, "en_US").format(this);
-    return "${this >= 0 ? '+' : ''}$v%";
-  }
-
-  String asAbbreviated() {
-    if (this < 1000) return this.toStringAsFixed(3);
-    if (this >= 1e18) return this.toStringAsExponential(3);
-    final s = intl.NumberFormat("#,###", "en_US").format(this).split(",");
-    const suffixes = ["K", "M", "B", "T", "Q"];
-    return "${s[0]}.${s[1]}${suffixes[s.length - 2]}";
-  }
 }
 
 extension ElementAtOrNull<E> on List<E> {
