@@ -5,15 +5,27 @@ import 'package:flutter/widgets.dart';
 import 'candle_data.dart';
 import 'painter_params.dart';
 
+typedef TimeLabelGetter = String Function(int timestamp, int visibleDataCount);
+typedef PriceLabelGetter = String Function(double price);
+typedef OverlayInfoGetter = Map<String, String> Function(CandleData candle);
+
 class ChartPainter extends CustomPainter {
   final PainterParams params;
+  final TimeLabelGetter getTimeLabel;
+  final PriceLabelGetter getPriceLabel;
+  final OverlayInfoGetter getOverlayInfo;
 
-  ChartPainter(this.params);
+  ChartPainter({
+    required this.params,
+    required this.getTimeLabel,
+    required this.getPriceLabel,
+    required this.getOverlayInfo,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Draw date labels & price labels
-    _drawDateLabels(canvas, params);
+    // Draw time labels (dates) & price labels
+    _drawTimeLabels(canvas, params);
     _drawPriceGridAndLabels(canvas, params);
 
     // Draw prices, volumes & trend line
@@ -38,8 +50,8 @@ class ChartPainter extends CustomPainter {
     }
   }
 
-  void _drawDateLabels(canvas, PainterParams params) {
-    // We draw one date label per 90 pixels of screen width
+  void _drawTimeLabels(canvas, PainterParams params) {
+    // We draw one time label per 90 pixels of screen width
     final lineCount = params.chartWidth ~/ 90;
     final gap = 1 / (lineCount + 1);
     for (int i = 1; i <= lineCount; i++) {
@@ -48,15 +60,15 @@ class ChartPainter extends CustomPainter {
       if (index < params.candles.length) {
         final candle = params.candles[index];
         final visibleDataCount = params.candles.length;
-        final dateTp = TextPainter(
+        final timeTp = TextPainter(
           text: TextSpan(
-            text: params.getDateLabel(candle.timestamp, visibleDataCount),
-            style: params.style.dateLabelStyle,
+            text: getTimeLabel(candle.timestamp, visibleDataCount),
+            style: params.style.timeLabelStyle,
           ),
         )
           ..textDirection = TextDirection.ltr
           ..layout();
-        dateTp.paint(canvas, Offset(x - dateTp.width / 2, params.chartHeight));
+        timeTp.paint(canvas, Offset(x - timeTp.width / 2, params.chartHeight));
       }
     }
   }
@@ -74,7 +86,7 @@ class ChartPainter extends CustomPainter {
       );
       final priceTp = TextPainter(
         text: TextSpan(
-          text: params.getPriceLabel(y),
+          text: getPriceLabel(y),
           style: params.style.priceLabelStyle,
         ),
       )
@@ -200,16 +212,20 @@ class ChartPainter extends CustomPainter {
           ..textDirection = TextDirection.ltr
           ..layout();
 
-    final info = params.getOverlayInfo(candle);
+    final info = getOverlayInfo(candle);
     final labels = info.keys.map((text) => makeTP(text)).toList();
     final values = info.values.map((text) => makeTP(text)).toList();
 
     final labelsMaxWidth = labels.map((tp) => tp.width).reduce(max);
     final valuesMaxWidth = values.map((tp) => tp.width).reduce(max);
     final panelWidth = labelsMaxWidth + valuesMaxWidth + xGap * 3;
-    final panelHeight =
-        values.first.height * values.length + yGap * (values.length + 1);
+    final panelHeight = max(
+          labels.map((tp) => tp.height).reduce((a, b) => a + b),
+          values.map((tp) => tp.height).reduce((a, b) => a + b),
+        ) +
+        yGap * (values.length + 1);
 
+    // Shift the canvas, so the overlay panel can appear near touch position.
     canvas.save();
     final pos = params.tapPosition!;
     final fingerSize = 32.0; // leave some margin around user's finger
@@ -226,27 +242,33 @@ class ChartPainter extends CustomPainter {
     if (dy < 0) dy = 0.0;
     canvas.translate(dx, dy);
 
-    // Paint overlay panel and texts
+    // Draw the background for overlay panel
     canvas.drawRRect(
         RRect.fromRectAndRadius(
           Offset.zero & Size(panelWidth, panelHeight),
           Radius.circular(8),
         ),
         Paint()..color = params.style.overlayBackgroundColor);
+
+    // Draw texts
+    var y = 0.0;
     for (int i = 0; i < labels.length; i++) {
-      labels[i].paint(
-        canvas,
-        Offset(xGap, (yGap + values.first.height) * i + yGap),
-      );
-    }
-    for (int i = 0; i < values.length; i++) {
-      final leading = valuesMaxWidth - values[i].width;
+      y += yGap;
+      final rowHeight = max(labels[i].height, values[i].height);
+      // Draw labels (left align, vertical center)
+      final labelY = y + (rowHeight - labels[i].height) / 2; // vertical center
+      labels[i].paint(canvas, Offset(xGap, labelY));
+
+      // Draw values (right align, vertical center)
+      final leading = valuesMaxWidth - values[i].width; // right align
+      final valueY = y + (rowHeight - values[i].height) / 2; // vertical center
       values[i].paint(
         canvas,
-        Offset(labelsMaxWidth + xGap * 2 + leading,
-            (yGap + values.first.height) * i + yGap),
+        Offset(labelsMaxWidth + xGap * 2 + leading, valueY),
       );
+      y += rowHeight;
     }
+
     canvas.restore();
   }
 

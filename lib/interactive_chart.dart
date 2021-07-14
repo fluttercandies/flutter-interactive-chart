@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/widgets.dart';
+import 'package:intl/intl.dart' as intl;
 
 import 'candle_data.dart';
 import 'chart_painter.dart';
@@ -11,8 +12,18 @@ class InteractiveChart extends StatefulWidget {
   final List<CandleData> candles;
   final ChartStyle style;
 
-  const InteractiveChart({Key? key, required this.candles, ChartStyle? style})
-      : this.style = style ?? const ChartStyle(),
+  final TimeLabelGetter? timeLabel;
+  final PriceLabelGetter? priceLabel;
+  final OverlayInfoGetter? overlayInfo;
+
+  const InteractiveChart({
+    Key? key,
+    required this.candles,
+    ChartStyle? style,
+    this.timeLabel,
+    this.priceLabel,
+    this.overlayInfo,
+  })  : this.style = style ?? const ChartStyle(),
         assert(candles.length >= 3,
             "InteractiveChart requires 3 or more CandleData"),
         super(key: key);
@@ -120,7 +131,12 @@ class _InteractiveChartState extends State<InteractiveChart> {
             builder: (_, PainterParams params, __) {
               return CustomPaint(
                 size: size,
-                painter: ChartPainter(params),
+                painter: ChartPainter(
+                  params: params,
+                  getTimeLabel: widget.timeLabel ?? defaultTimeLabel,
+                  getPriceLabel: widget.priceLabel ?? defaultPriceLabel,
+                  getOverlayInfo: widget.overlayInfo ?? defaultOverlayInfo,
+                ),
               );
             },
           ),
@@ -185,5 +201,52 @@ class _InteractiveChartState extends State<InteractiveChart> {
     final count = w / candleWidth; // visible candles in the window
     final start = widget.candles.length - count;
     return max(0, candleWidth * start);
+  }
+
+  String defaultTimeLabel(int timestamp, int visibleDataCount) {
+    final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000)
+        .toIso8601String()
+        .split("T")
+        .first
+        .split("-");
+
+    if (visibleDataCount > 20) {
+      // If more than 20 data points are visible, we should show year and month.
+      return "${date[0]}-${date[1]}"; // yyyy-mm
+    } else {
+      // Otherwise, we should show month and date.
+      return "${date[1]}-${date[2]}"; // mm-dd
+    }
+  }
+
+  String defaultPriceLabel(double price) => price.toStringAsFixed(2);
+
+  Map<String, String> defaultOverlayInfo(CandleData candle) {
+    final date = intl.DateFormat.yMMMd()
+        .format(DateTime.fromMillisecondsSinceEpoch(candle.timestamp * 1000));
+    return {
+      "Date": date,
+      "Open": candle.open?.toStringAsFixed(2) ?? "-",
+      "High": candle.high?.toStringAsFixed(2) ?? "-",
+      "Low": candle.low?.toStringAsFixed(2) ?? "-",
+      "Close": candle.close?.toStringAsFixed(2) ?? "-",
+      "Volume": candle.volume?.asAbbreviated() ?? "-",
+    };
+  }
+}
+
+extension Formatting on double {
+  String asPercent() {
+    final format = this < 100 ? "##0.00" : "#,###";
+    final v = intl.NumberFormat(format, "en_US").format(this);
+    return "${this >= 0 ? '+' : ''}$v%";
+  }
+
+  String asAbbreviated() {
+    if (this < 1000) return this.toStringAsFixed(3);
+    if (this >= 1e18) return this.toStringAsExponential(3);
+    final s = intl.NumberFormat("#,###", "en_US").format(this).split(",");
+    const suffixes = ["K", "M", "B", "T", "Q"];
+    return "${s[0]}.${s[1]}${suffixes[s.length - 2]}";
   }
 }

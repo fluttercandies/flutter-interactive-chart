@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/widgets.dart';
-import 'package:intl/intl.dart' as intl;
 
 import 'chart_style.dart';
 import 'candle_data.dart';
@@ -41,8 +40,8 @@ class PainterParams {
   double get chartWidth => // width without price labels
       size.width - style.priceLabelWidth;
 
-  double get chartHeight => // height without date labels
-      size.height - style.dateLabelHeight;
+  double get chartHeight => // height without time labels
+      size.height - style.timeLabelHeight;
 
   double get volumeHeight => chartHeight * style.volumeHeightFactor;
 
@@ -63,37 +62,6 @@ class PainterParams {
     final volGridSize = (volumeHeight - baseAmount - gap) / (maxVol - minVol);
     final vol = (y - minVol) * volGridSize;
     return volumeHeight - vol + priceHeight - baseAmount;
-  }
-
-  String getDateLabel(int timestamp, int visibleDataCount) {
-    final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000)
-        .toIso8601String()
-        .split("T")
-        .first
-        .split("-");
-
-    if (visibleDataCount > 20) {
-      // If more than 20 data points are visible, we should show year and month.
-      return "${date[0]}-${date[1]}"; // yyyy-mm
-    } else {
-      // Otherwise, we should show month and date.
-      return "${date[1]}-${date[2]}"; // mm-dd
-    }
-  }
-
-  String getPriceLabel(double price) => price.toStringAsFixed(2);
-
-  Map<String, String> getOverlayInfo(CandleData candle) {
-    final date = intl.DateFormat.yMMMd()
-        .format(DateTime.fromMillisecondsSinceEpoch(candle.timestamp * 1000));
-    return {
-      "Date": date,
-      "Open": candle.open?.toStringAsFixed(2) ?? "-",
-      "High": candle.high?.toStringAsFixed(2) ?? "-",
-      "Low": candle.low?.toStringAsFixed(2) ?? "-",
-      "Close": candle.close?.toStringAsFixed(2) ?? "-",
-      "Volume": candle.volume?.asAbbreviated() ?? "-",
-    };
   }
 
   static PainterParams lerp(PainterParams a, PainterParams b, double t) {
@@ -125,20 +93,4 @@ class PainterParamsTween extends Tween<PainterParams> {
 
   @override
   PainterParams lerp(double t) => PainterParams.lerp(begin ?? end!, end!, t);
-}
-
-extension Formatting on double {
-  String asPercent() {
-    final format = this < 100 ? "##0.00" : "#,###";
-    final v = intl.NumberFormat(format, "en_US").format(this);
-    return "${this >= 0 ? '+' : ''}$v%";
-  }
-
-  String asAbbreviated() {
-    if (this < 1000) return this.toStringAsFixed(3);
-    if (this >= 1e18) return this.toStringAsExponential(3);
-    final s = intl.NumberFormat("#,###", "en_US").format(this).split(",");
-    const suffixes = ["K", "M", "B", "T", "Q"];
-    return "${s[0]}.${s[1]}${suffixes[s.length - 2]}";
-  }
 }

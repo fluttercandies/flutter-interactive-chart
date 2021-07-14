@@ -17,7 +17,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   List<CandleData> _data = MockDataTesla.candles;
-  bool _darkMode = false;
+  bool _darkMode = true;
   bool _showAverage = false;
 
   @override
@@ -55,17 +55,24 @@ class _MyAppState extends State<MyApp> {
           child: InteractiveChart(
             candles: _data,
             style: ChartStyle(
-              priceGainColor: Colors.purple,
-              priceLossColor: Colors.deepPurple,
-              volumeColor: Colors.pink,
-              trendLineColor: Colors.teal,
-              priceGridLineColor: Colors.green,
-              priceLabelStyle: TextStyle(color: Colors.orange[800]!),
-              dateLabelStyle: TextStyle(color: Colors.indigo),
-              selectionHighlightColor: Colors.yellow.withOpacity(0.5),
-              overlayBackgroundColor: Colors.blue[100]!.withOpacity(0.8),
-              overlayTextStyle: TextStyle(color: Colors.blue[900]),
+              priceGainColor: Colors.teal[200]!,
+              priceLossColor: Colors.blueGrey,
+              volumeColor: Colors.teal.withOpacity(0.8),
+              trendLineColor: Colors.blueGrey[200]!,
+              priceGridLineColor: Colors.blue[200]!,
+              priceLabelStyle: TextStyle(color: Colors.blue[200]),
+              timeLabelStyle: TextStyle(color: Colors.indigo),
+              selectionHighlightColor: Colors.red.withOpacity(0.2),
+              overlayBackgroundColor: Colors.red[900]!.withOpacity(0.6),
+              overlayTextStyle: TextStyle(color: Colors.red[100]),
             ),
+            overlayInfo: (candle) => {
+              "💎": "🤚    ",
+              "高": "${candle.high?.toStringAsFixed(2)}",
+              "低": "${candle.low?.toStringAsFixed(2)}",
+            },
+            timeLabel: (timestamp, count) => "📅",
+            priceLabel: (price) => "${price.round()} 💎",
           ),
         ),
       ),

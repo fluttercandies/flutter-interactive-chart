@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 class ChartStyle {
   final double volumeHeightFactor;
   final double priceLabelWidth;
-  final double dateLabelHeight;
+  final double timeLabelHeight;
 
-  final TextStyle dateLabelStyle;
+  final TextStyle timeLabelStyle;
   final TextStyle priceLabelStyle;
   final TextStyle overlayTextStyle;
 
@@ -27,8 +27,8 @@ class ChartStyle {
   const ChartStyle({
     this.volumeHeightFactor = 0.2,
     this.priceLabelWidth = 48.0,
-    this.dateLabelHeight = 24.0,
-    this.dateLabelStyle = const TextStyle(
+    this.timeLabelHeight = 24.0,
+    this.timeLabelStyle = const TextStyle(
       fontSize: 16,
       color: Colors.grey,
     ),
