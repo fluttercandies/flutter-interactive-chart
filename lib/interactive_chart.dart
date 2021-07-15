@@ -12,13 +12,43 @@ class InteractiveChart extends StatefulWidget {
   final List<CandleData> candles;
   final ChartStyle style;
 
+  /// How the date/time label at the bottom are displayed.
+  ///
+  /// If null, it defaults to use yyyy-mm format if more than 20 data points
+  /// are visible in the current chart window, otherwise it uses mm-dd format.
   final TimeLabelGetter? timeLabel;
+
+  /// How the price labels on the right are displayed.
+  ///
+  /// If null, it defaults to show 2 digits after the decimal point.
   final PriceLabelGetter? priceLabel;
+
+  /// How the overlay info are displayed, when user touches the chart.
+  ///
+  /// If null, it defaults to display `date`, `open`, `high`, `low`, `close`
+  /// and `volume` fields when user selects a data point in the chart.
+  ///
+  /// To customize it, pass in a function that returns a Map<String,String>:
+  /// ```dart
+  /// return {
+  ///   "Date": "Customized date string goes here",
+  ///   "Open": candle.open?.toStringAsFixed(2) ?? "-",
+  ///   "Close": candle.close?.toStringAsFixed(2) ?? "-",
+  /// };
+  /// ```
   final OverlayInfoGetter? overlayInfo;
 
   const InteractiveChart({
     Key? key,
+
+    /// The full list of [CandleData] to be used for this chart.
+    ///
+    /// It needs to have at least 3 data points. If data is sufficiently large,
+    /// the chart will default to display the most recent 90 data points when
+    /// first opened, and allow user to freely zoom and pan however they like.
     required this.candles,
+
+    /// If non-null, the style to use for this chart.
     ChartStyle? style,
     this.timeLabel,
     this.priceLabel,
