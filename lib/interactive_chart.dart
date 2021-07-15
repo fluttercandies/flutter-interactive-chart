@@ -84,10 +84,22 @@ class _InteractiveChartState extends State<InteractiveChart> {
         final xShift = halfCandle - fractionCandle;
 
         // Calculate min and max among the visible data
+        double? highest(CandleData c) {
+          if (c.high != null) return c.high;
+          if (c.open != null && c.close != null) return max(c.open!, c.close!);
+          return c.open ?? c.close;
+        }
+
+        double? lowest(CandleData c) {
+          if (c.low != null) return c.low;
+          if (c.open != null && c.close != null) return min(c.open!, c.close!);
+          return c.open ?? c.close;
+        }
+
         final maxPrice =
-            candlesInRange.map((c) => c.high).whereType<double>().reduce(max);
+            candlesInRange.map(highest).whereType<double>().reduce(max);
         final minPrice =
-            candlesInRange.map((c) => c.low).whereType<double>().reduce(min);
+            candlesInRange.map(lowest).whereType<double>().reduce(min);
         final maxVol =
             candlesInRange.map((c) => c.volume).whereType<double>().reduce(max);
         final minVol =

@@ -11,10 +11,10 @@ class CandleData {
   CandleData({
     required this.timestamp,
     required this.open,
-    required this.high,
-    required this.low,
     required this.close,
     required this.volume,
+    this.high,
+    this.low,
   });
 
   static void computeMA(List<CandleData> data, [int period = 7]) {
