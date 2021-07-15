@@ -83,6 +83,29 @@ class PainterParams {
       trailingTrend: b.trailingTrend,
     );
   }
+
+  bool shouldRepaint(PainterParams other) {
+    if (candles.length != other.candles.length) return true;
+
+    if (size != other.size ||
+        candleWidth != other.candleWidth ||
+        startOffset != other.startOffset ||
+        xShift != other.xShift) return true;
+
+    if (maxPrice != other.maxPrice ||
+        minPrice != other.minPrice ||
+        maxVol != other.maxVol ||
+        minVol != other.minVol) return true;
+
+    if (tapPosition != other.tapPosition) return true;
+
+    if (leadingTrend != other.leadingTrend ||
+        trailingTrend != other.trailingTrend) return true;
+
+    if (style != other.style) return true;
+
+    return false;
+  }
 }
 
 class PainterParamsTween extends Tween<PainterParams> {

@@ -141,13 +141,15 @@ class _InteractiveChartState extends State<InteractiveChart> {
             duration: Duration(milliseconds: 300),
             curve: Curves.easeOut,
             builder: (_, PainterParams params, __) {
-              return CustomPaint(
-                size: size,
-                painter: ChartPainter(
-                  params: params,
-                  getTimeLabel: widget.timeLabel ?? defaultTimeLabel,
-                  getPriceLabel: widget.priceLabel ?? defaultPriceLabel,
-                  getOverlayInfo: widget.overlayInfo ?? defaultOverlayInfo,
+              return RepaintBoundary(
+                child: CustomPaint(
+                  size: size,
+                  painter: ChartPainter(
+                    params: params,
+                    getTimeLabel: widget.timeLabel ?? defaultTimeLabel,
+                    getPriceLabel: widget.priceLabel ?? defaultPriceLabel,
+                    getOverlayInfo: widget.overlayInfo ?? defaultOverlayInfo,
+                  ),
                 ),
               );
             },

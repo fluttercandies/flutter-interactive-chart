@@ -273,7 +273,8 @@ class ChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(ChartPainter oldDelegate) => true;
+  bool shouldRepaint(ChartPainter oldDelegate) =>
+      params.shouldRepaint(oldDelegate.params);
 }
 
 extension ElementAtOrNull<E> on List<E> {
