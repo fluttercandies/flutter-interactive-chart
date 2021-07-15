@@ -68,7 +68,13 @@ class ChartPainter extends CustomPainter {
         )
           ..textDirection = TextDirection.ltr
           ..layout();
-        timeTp.paint(canvas, Offset(x - timeTp.width / 2, params.chartHeight));
+
+        // Align texts towards vertical bottom
+        final topPadding = params.style.timeLabelHeight - timeTp.height;
+        timeTp.paint(
+          canvas,
+          Offset(x - timeTp.width / 2, params.chartHeight + topPadding),
+        );
       }
     }
   }
