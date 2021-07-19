@@ -199,8 +199,8 @@ class _InteractiveChartState extends State<InteractiveChart> {
     startOffset += dx;
     // Adjust pan when zooming
     final double prevCount = w / _prevCandleWidth;
-    final double currCount = w / _candleWidth;
-    final zoomAdjustment = (currCount - prevCount) * _candleWidth;
+    final double currCount = w / candleWidth;
+    final zoomAdjustment = (currCount - prevCount) * candleWidth;
     final focalPointFactor = details.localFocalPoint.dx / w;
     startOffset -= zoomAdjustment * focalPointFactor;
     startOffset = startOffset.clamp(0, _getMaxStartOffset(w, candleWidth));
