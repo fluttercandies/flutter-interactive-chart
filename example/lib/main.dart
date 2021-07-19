@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:interactive_chart/candle_data.dart';
 import 'package:interactive_chart/interactive_chart.dart';
-import 'package:interactive_chart/chart_style.dart';
-
 import 'mock_data.dart';
 
 void main() {

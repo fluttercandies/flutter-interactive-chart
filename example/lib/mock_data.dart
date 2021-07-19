@@ -1,4 +1,4 @@
-import 'package:interactive_chart/candle_data.dart';
+import 'package:interactive_chart/interactive_chart.dart';
 
 class MockDataTesla {
   static const List<dynamic> _rawData = [
