@@ -235,7 +235,8 @@ class ChartPainter extends CustomPainter {
     canvas.save();
     final pos = params.tapPosition!;
     final fingerSize = 32.0; // leave some margin around user's finger
-    var dx, dy;
+    double dx, dy;
+    assert(params.size.width >= panelWidth, "Overlay panel is too wide.");
     if (pos.dx <= params.size.width / 2) {
       // If user touches the left-half of the screen,
       // we show the overlay panel near finger touch position, on the right.
@@ -244,6 +245,7 @@ class ChartPainter extends CustomPainter {
       // Otherwise we show panel on the left of the finger touch position.
       dx = pos.dx - panelWidth - fingerSize;
     }
+    dx = dx.clamp(0, params.size.width - panelWidth);
     dy = pos.dy - panelHeight - fingerSize;
     if (dy < 0) dy = 0.0;
     canvas.translate(dx, dy);
