@@ -247,7 +247,7 @@ class _InteractiveChartState extends State<InteractiveChart> {
   }
 
   String defaultTimeLabel(int timestamp, int visibleDataCount) {
-    final date = DateTime.fromMillisecondsSinceEpoch(timestamp * 1000)
+    final date = DateTime.fromMillisecondsSinceEpoch(timestamp)
         .toIso8601String()
         .split("T")
         .first
@@ -266,7 +266,7 @@ class _InteractiveChartState extends State<InteractiveChart> {
 
   Map<String, String> defaultOverlayInfo(CandleData candle) {
     final date = intl.DateFormat.yMMMd()
-        .format(DateTime.fromMillisecondsSinceEpoch(candle.timestamp * 1000));
+        .format(DateTime.fromMillisecondsSinceEpoch(candle.timestamp));
     return {
       "Date": date,
       "Open": candle.open?.toStringAsFixed(2) ?? "-",

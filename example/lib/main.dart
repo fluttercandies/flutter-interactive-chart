@@ -69,7 +69,6 @@ class _MyAppState extends State<MyApp> {
               "高": "${candle.high?.toStringAsFixed(2)}",
               "低": "${candle.low?.toStringAsFixed(2)}",
             },
-            timeLabel: (timestamp, count) => "<Date>",
             priceLabel: (price) => "${price.round()} 💎",
           ),
         ),

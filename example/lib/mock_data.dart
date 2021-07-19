@@ -1114,7 +1114,7 @@ class MockDataTesla {
 
   static List<CandleData> get candles => _rawData
       .map((row) => CandleData(
-            timestamp: row[0],
+            timestamp: row[0] * 1000,
             open: row[1]?.toDouble(),
             high: row[2]?.toDouble(),
             low: row[3]?.toDouble(),
