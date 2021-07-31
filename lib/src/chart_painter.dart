@@ -219,6 +219,7 @@ class ChartPainter extends CustomPainter {
           ..layout();
 
     final info = getOverlayInfo(candle);
+    if (info.isEmpty) return;
     final labels = info.keys.map((text) => makeTP(text)).toList();
     final values = info.values.map((text) => makeTP(text)).toList();
 
