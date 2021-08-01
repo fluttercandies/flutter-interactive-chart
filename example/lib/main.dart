@@ -50,8 +50,10 @@ class _MyAppState extends State<MyApp> {
         body: SafeArea(
           minimum: const EdgeInsets.all(24.0),
           child: InteractiveChart(
+            /** Only [candles] is required */
             candles: _data,
-            /** Uncomment the following to see more examples */
+            /** Uncomment the following for examples on optional parameters */
+
             /** Example styling */
             // style: ChartStyle(
             //   priceGainColor: Colors.teal[200]!,
@@ -76,7 +78,9 @@ class _MyAppState extends State<MyApp> {
             //   "Hi": "${candle.high?.toStringAsFixed(2)}",
             //   "Lo": "${candle.low?.toStringAsFixed(2)}",
             // },
-
+            /** Callbacks */
+            // onTap: (candle) => print("user tapped on $candle"),
+            // onCandleResize: (width) => print("each candle is $width wide"),
           ),
         ),
       ),

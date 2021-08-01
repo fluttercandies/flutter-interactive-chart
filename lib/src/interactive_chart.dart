@@ -45,6 +45,14 @@ class InteractiveChart extends StatefulWidget {
   /// ```
   final OverlayInfoGetter? overlayInfo;
 
+  /// An optional event, fired when the user clicks on a candlestick.
+  final ValueChanged<CandleData>? onTap;
+
+  /// An optional event, fired when user zooms in/out.
+  ///
+  /// This provides the width of a candlestick at the current zoom level.
+  final ValueChanged<double>? onCandleResize;
+
   const InteractiveChart({
     Key? key,
     required this.candles,
@@ -52,6 +60,8 @@ class InteractiveChart extends StatefulWidget {
     this.timeLabel,
     this.priceLabel,
     this.overlayInfo,
+    this.onTap,
+    this.onCandleResize,
   })  : this.style = style ?? const ChartStyle(),
         assert(candles.length >= 3,
             "InteractiveChart requires 3 or more CandleData"),
@@ -78,6 +88,7 @@ class _InteractiveChartState extends State<InteractiveChart> {
   late double _prevCandleWidth;
   late double _prevStartOffset;
   late Offset _initialFocalPoint;
+  PainterParams? _prevParams; // used in onTapUp event
 
   @override
   Widget build(BuildContext context) {
@@ -140,7 +151,13 @@ class _InteractiveChartState extends State<InteractiveChart> {
             setState(() => _tapPosition = details.localPosition);
           },
           onTapCancel: () => setState(() => _tapPosition = null),
-          onTapUp: (_) => setState(() => _tapPosition = null),
+          onTapUp: (_) {
+            if (widget.onTap != null) {
+              _fireOnTapEvent(); // Fire callback event (if needed)
+            }
+            setState(() => _tapPosition = null);
+          },
+
           // Pan and zoom
           onScaleStart: (details) {
             _prevCandleWidth = _candleWidth;
@@ -166,10 +183,10 @@ class _InteractiveChartState extends State<InteractiveChart> {
                 trailingTrend: trailingTrend,
               ),
             ),
-            // duration: Duration.zero,
             duration: Duration(milliseconds: 300),
             curve: Curves.easeOut,
             builder: (_, PainterParams params, __) {
+              _prevParams = params;
               return RepaintBoundary(
                 child: CustomPaint(
                   size: size,
@@ -204,6 +221,10 @@ class _InteractiveChartState extends State<InteractiveChart> {
     final focalPointFactor = details.localFocalPoint.dx / w;
     startOffset -= zoomAdjustment * focalPointFactor;
     startOffset = startOffset.clamp(0, _getMaxStartOffset(w, candleWidth));
+    // Fire candle width resize event
+    if (candleWidth != _candleWidth) {
+      widget.onCandleResize?.call(candleWidth);
+    }
     // Apply changes
     setState(() {
       _candleWidth = candleWidth;
@@ -275,6 +296,15 @@ class _InteractiveChartState extends State<InteractiveChart> {
       "Close": candle.close?.toStringAsFixed(2) ?? "-",
       "Volume": candle.volume?.asAbbreviated() ?? "-",
     };
+  }
+
+  void _fireOnTapEvent() {
+    if (_prevParams == null || _tapPosition == null) return;
+    final params = _prevParams!;
+    final dx = _tapPosition!.dx;
+    final selected = params.getCandleIndexFromOffset(dx);
+    final candle = params.candles[selected];
+    widget.onTap?.call(candle);
   }
 }
 
