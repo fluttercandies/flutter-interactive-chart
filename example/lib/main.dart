@@ -72,7 +72,7 @@ class _MyAppState extends State<MyApp> {
             // timeLabel: (timestamp, visibleDataCount) => "📅",
             // priceLabel: (price) => "${price.round()} 💎",
             /** Customize overlay (tap and hold to see it)
-             ** Or return a blank object to disable it. */
+             ** Or return an empty object to disable overlay info. */
             // overlayInfo: (candle) => {
             //   "💎": "🤚    ",
             //   "Hi": "${candle.high?.toStringAsFixed(2)}",
