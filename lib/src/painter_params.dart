@@ -18,8 +18,8 @@ class PainterParams {
 
   final double xShift;
   final Offset? tapPosition;
-  final double? leadingTrend;
-  final double? trailingTrend;
+  final List<double?>? leadingTrends;
+  final List<double?>? trailingTrends;
 
   PainterParams({
     required this.candles,
@@ -33,8 +33,8 @@ class PainterParams {
     required this.minVol,
     required this.xShift,
     required this.tapPosition,
-    required this.leadingTrend,
-    required this.trailingTrend,
+    required this.leadingTrends,
+    required this.trailingTrends,
   });
 
   double get chartWidth => // width without price labels
@@ -79,8 +79,8 @@ class PainterParams {
       minVol: lerpField((p) => p.minVol),
       xShift: b.xShift,
       tapPosition: b.tapPosition,
-      leadingTrend: b.leadingTrend,
-      trailingTrend: b.trailingTrend,
+      leadingTrends: b.leadingTrends,
+      trailingTrends: b.trailingTrends,
     );
   }
 
@@ -99,8 +99,8 @@ class PainterParams {
 
     if (tapPosition != other.tapPosition) return true;
 
-    if (leadingTrend != other.leadingTrend ||
-        trailingTrend != other.trailingTrend) return true;
+    if (leadingTrends != other.leadingTrends ||
+        trailingTrends != other.trailingTrends) return true;
 
     if (style != other.style) return true;
 

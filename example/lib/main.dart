@@ -39,9 +39,9 @@ class _MyAppState extends State<MyApp> {
               onPressed: () {
                 setState(() => _showAverage = !_showAverage);
                 if (_showAverage) {
-                  CandleData.computeMA(_data, 7);
+                  _computeTrendLines();
                 } else {
-                  CandleData.deleteMA(_data);
+                  _removeTrendLines();
                 }
               },
             ),
@@ -59,7 +59,16 @@ class _MyAppState extends State<MyApp> {
             //   priceGainColor: Colors.teal[200]!,
             //   priceLossColor: Colors.blueGrey,
             //   volumeColor: Colors.teal.withOpacity(0.8),
-            //   trendLineColor: Colors.blueGrey[200]!,
+            //   trendLineStyles: [
+            //     Paint()
+            //       ..strokeWidth = 2.0
+            //       ..strokeCap = StrokeCap.round
+            //       ..color = Colors.deepOrange,
+            //     Paint()
+            //       ..strokeWidth = 4.0
+            //       ..strokeCap = StrokeCap.round
+            //       ..color = Colors.orange,
+            //   ],
             //   priceGridLineColor: Colors.blue[200]!,
             //   priceLabelStyle: TextStyle(color: Colors.blue[200]),
             //   timeLabelStyle: TextStyle(color: Colors.blue[200]),
@@ -85,5 +94,21 @@ class _MyAppState extends State<MyApp> {
         ),
       ),
     );
+  }
+
+  _computeTrendLines() {
+    final ma7 = CandleData.computeMA(_data, 7);
+    final ma30 = CandleData.computeMA(_data, 30);
+    final ma90 = CandleData.computeMA(_data, 90);
+
+    for (int i = 0; i < _data.length; i++) {
+      _data[i].trends = [ma7[i], ma30[i], ma90[i]];
+    }
+  }
+
+  _removeTrendLines() {
+    for (final data in _data) {
+      data.trends = [];
+    }
   }
 }

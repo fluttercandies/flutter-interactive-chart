@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 
 import 'candle_data.dart';
@@ -150,39 +151,44 @@ class ChartPainter extends CustomPainter {
       );
     }
     // Draw trend line
-    final trendLinePaint = Paint()
-      ..strokeWidth = 2.0
-      ..strokeCap = StrokeCap.round
-      ..color = params.style.trendLineColor;
-    final pt = candle.trend; // current data point
-    final prevPt = params.candles.at(i - 1)?.trend;
-    if (pt != null && prevPt != null) {
-      canvas.drawLine(
-        Offset(x - params.candleWidth, params.fitPrice(prevPt)),
-        Offset(x, params.fitPrice(pt)),
-        trendLinePaint,
-      );
-    }
-    if (i == 0) {
-      // In the front, draw an extra line connecting to out-of-window data
-      if (pt != null && params.leadingTrend != null) {
+    for (int j = 0; j < candle.trends.length; j++) {
+      final trendLinePaint = params.style.trendLineStyles.at(j) ??
+          (Paint()
+            ..strokeWidth = 2.0
+            ..strokeCap = StrokeCap.round
+            ..color = Colors.blue);
+
+      final pt = candle.trends.at(j); // current data point
+      final prevPt = params.candles.at(i - 1)?.trends.at(j);
+      if (pt != null && prevPt != null) {
         canvas.drawLine(
-          Offset(x - params.candleWidth, params.fitPrice(params.leadingTrend!)),
+          Offset(x - params.candleWidth, params.fitPrice(prevPt)),
           Offset(x, params.fitPrice(pt)),
           trendLinePaint,
         );
       }
-    } else if (i == params.candles.length - 1) {
-      // At the end, draw an extra line connecting to out-of-window data
-      if (pt != null && params.trailingTrend != null) {
-        canvas.drawLine(
-          Offset(x, params.fitPrice(pt)),
-          Offset(
-            x + params.candleWidth,
-            params.fitPrice(params.trailingTrend!),
-          ),
-          trendLinePaint,
-        );
+      if (i == 0) {
+        // In the front, draw an extra line connecting to out-of-window data
+        if (pt != null && params.leadingTrends?.at(j) != null) {
+          canvas.drawLine(
+            Offset(x - params.candleWidth,
+                params.fitPrice(params.leadingTrends!.at(j)!)),
+            Offset(x, params.fitPrice(pt)),
+            trendLinePaint,
+          );
+        }
+      } else if (i == params.candles.length - 1) {
+        // At the end, draw an extra line connecting to out-of-window data
+        if (pt != null && params.trailingTrends?.at(j) != null) {
+          canvas.drawLine(
+            Offset(x, params.fitPrice(pt)),
+            Offset(
+              x + params.candleWidth,
+              params.fitPrice(params.trailingTrends!.at(j)!),
+            ),
+            trendLinePaint,
+          );
+        }
       }
     }
   }

@@ -111,8 +111,8 @@ class _InteractiveChartState extends State<InteractiveChart> {
 
         // If possible, find neighbouring trend line data,
         // so the chart could draw better-connected lines
-        final leadingTrend = widget.candles.at(start - 1)?.trend;
-        final trailingTrend = widget.candles.at(end + 1)?.trend;
+        final leadingTrends = widget.candles.at(start - 1)?.trends;
+        final trailingTrends = widget.candles.at(end + 1)?.trends;
 
         // Find the horizontal shift needed when drawing the candles.
         // First, always shift the chart by half a candle, because when we
@@ -179,8 +179,8 @@ class _InteractiveChartState extends State<InteractiveChart> {
                 minVol: minVol,
                 xShift: xShift,
                 tapPosition: _tapPosition,
-                leadingTrend: leadingTrend,
-                trailingTrend: trailingTrend,
+                leadingTrends: leadingTrends,
+                trailingTrends: trailingTrends,
               ),
             ),
             duration: Duration(milliseconds: 300),

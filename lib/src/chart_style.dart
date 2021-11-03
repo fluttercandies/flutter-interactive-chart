@@ -38,8 +38,10 @@ class ChartStyle {
   /// The color of the `volume` bars.
   final Color volumeColor;
 
-  /// The color of the trend line, if available.
-  final Color trendLineColor;
+  /// The style of trend lines. If there are multiple lines, their styles will
+  /// be chosen in the order of appearance in this list. If this list is shorter
+  /// than the number of trend lines, a default blue paint will be applied.
+  final List<Paint> trendLineStyles;
 
   /// The color of the price grid line.
   final Color priceGridLineColor;
@@ -71,7 +73,7 @@ class ChartStyle {
     this.priceGainColor = Colors.green,
     this.priceLossColor = Colors.red,
     this.volumeColor = Colors.grey,
-    this.trendLineColor = Colors.blue,
+    this.trendLineStyles = const [],
     this.priceGridLineColor = Colors.grey,
     this.selectionHighlightColor = const Color(0x33757575),
     this.overlayBackgroundColor = const Color(0xEE757575),
