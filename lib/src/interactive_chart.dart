@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart' as intl;
 
@@ -145,80 +146,98 @@ class _InteractiveChartState extends State<InteractiveChart> {
         final minVol =
             candlesInRange.map((c) => c.volume).whereType<double>().reduce(min);
 
-        return GestureDetector(
-          // Tap and hold to view candle details
-          onTapDown: (details) {
-            setState(() => _tapPosition = details.localPosition);
-          },
-          onTapCancel: () => setState(() => _tapPosition = null),
-          onTapUp: (_) {
-            if (widget.onTap != null) {
-              _fireOnTapEvent(); // Fire callback event (if needed)
-            }
-            setState(() => _tapPosition = null);
-          },
-
-          // Pan and zoom
-          onScaleStart: (details) {
-            _prevCandleWidth = _candleWidth;
-            _prevStartOffset = _startOffset;
-            _initialFocalPoint = details.localFocalPoint;
-          },
-          onScaleUpdate: (details) => _onScaleUpdate(details, w),
-          child: TweenAnimationBuilder(
-            tween: PainterParamsTween(
-              end: PainterParams(
-                candles: candlesInRange,
-                style: widget.style,
-                size: size,
-                candleWidth: _candleWidth,
-                startOffset: _startOffset,
-                maxPrice: maxPrice,
-                minPrice: minPrice,
-                maxVol: maxVol,
-                minVol: minVol,
-                xShift: xShift,
-                tapPosition: _tapPosition,
-                leadingTrends: leadingTrends,
-                trailingTrends: trailingTrends,
-              ),
+        final child = TweenAnimationBuilder(
+          tween: PainterParamsTween(
+            end: PainterParams(
+              candles: candlesInRange,
+              style: widget.style,
+              size: size,
+              candleWidth: _candleWidth,
+              startOffset: _startOffset,
+              maxPrice: maxPrice,
+              minPrice: minPrice,
+              maxVol: maxVol,
+              minVol: minVol,
+              xShift: xShift,
+              tapPosition: _tapPosition,
+              leadingTrends: leadingTrends,
+              trailingTrends: trailingTrends,
             ),
-            duration: Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-            builder: (_, PainterParams params, __) {
-              _prevParams = params;
-              return RepaintBoundary(
-                child: CustomPaint(
-                  size: size,
-                  painter: ChartPainter(
-                    params: params,
-                    getTimeLabel: widget.timeLabel ?? defaultTimeLabel,
-                    getPriceLabel: widget.priceLabel ?? defaultPriceLabel,
-                    getOverlayInfo: widget.overlayInfo ?? defaultOverlayInfo,
-                  ),
+          ),
+          duration: Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+          builder: (_, PainterParams params, __) {
+            _prevParams = params;
+            return RepaintBoundary(
+              child: CustomPaint(
+                size: size,
+                painter: ChartPainter(
+                  params: params,
+                  getTimeLabel: widget.timeLabel ?? defaultTimeLabel,
+                  getPriceLabel: widget.priceLabel ?? defaultPriceLabel,
+                  getOverlayInfo: widget.overlayInfo ?? defaultOverlayInfo,
                 ),
-              );
+              ),
+            );
+          },
+        );
+
+        return Listener(
+          onPointerSignal: (signal) {
+            if (signal is PointerScrollEvent) {
+              final dy = signal.scrollDelta.dy;
+              if (dy.abs() > 0) {
+                _onScaleStart(signal.position);
+                _onScaleUpdate(
+                  dy > 0 ? 0.9 : 1.1,
+                  signal.position,
+                  w,
+                );
+              }
+            }
+          },
+          child: GestureDetector(
+            // Tap and hold to view candle details
+            onTapDown: (details) => setState(() {
+              _tapPosition = details.localPosition;
+            }),
+            onTapCancel: () => setState(() => _tapPosition = null),
+            onTapUp: (_) {
+              setState(() => _tapPosition = null);
+              // Fire callback event (if needed)
+              if (widget.onTap != null) _fireOnTapEvent();
             },
+            // Pan and zoom
+            onScaleStart: (details) => _onScaleStart(details.localFocalPoint),
+            onScaleUpdate: (details) =>
+                _onScaleUpdate(details.scale, details.localFocalPoint, w),
+            child: child,
           ),
         );
       },
     );
   }
 
-  _onScaleUpdate(details, double w) {
+  _onScaleStart(Offset focalPoint) {
+    _prevCandleWidth = _candleWidth;
+    _prevStartOffset = _startOffset;
+    _initialFocalPoint = focalPoint;
+  }
+
+  _onScaleUpdate(double scale, Offset focalPoint, double w) {
     // Handle zoom
-    final candleWidth = (_prevCandleWidth * details.scale)
+    final candleWidth = (_prevCandleWidth * scale)
         .clamp(_getMinCandleWidth(w), _getMaxCandleWidth(w));
     final clampedScale = candleWidth / _prevCandleWidth;
     var startOffset = _prevStartOffset * clampedScale;
     // Handle pan
-    final dx = (details.localFocalPoint - _initialFocalPoint).dx * -1;
+    final dx = (focalPoint - _initialFocalPoint).dx * -1;
     startOffset += dx;
     // Adjust pan when zooming
     final double prevCount = w / _prevCandleWidth;
     final double currCount = w / candleWidth;
     final zoomAdjustment = (currCount - prevCount) * candleWidth;
-    final focalPointFactor = details.localFocalPoint.dx / w;
+    final focalPointFactor = focalPoint.dx / w;
     startOffset -= zoomAdjustment * focalPointFactor;
     startOffset = startOffset.clamp(0, _getMaxStartOffset(w, candleWidth));
     // Fire candle width resize event
