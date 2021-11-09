@@ -14,8 +14,14 @@ class InteractiveChart extends StatefulWidget {
   ///
   /// It needs to have at least 3 data points. If data is sufficiently large,
   /// the chart will default to display the most recent 90 data points when
-  /// first opened, and allow user to freely zoom and pan however they like.
+  /// first opened (configurable with [initialVisibleCandleCount] parameter),
+  /// and allow users to freely zoom and pan however they like.
   final List<CandleData> candles;
+
+  /// The default number of data points to be displayed when the chart is first
+  /// opened. The default value is 90. If [CandleData] does not have enough data
+  /// points, the chart will display all of them.
+  final int initialVisibleCandleCount;
 
   /// If non-null, the style to use for this chart.
   final ChartStyle style;
@@ -57,6 +63,7 @@ class InteractiveChart extends StatefulWidget {
   const InteractiveChart({
     Key? key,
     required this.candles,
+    this.initialVisibleCandleCount = 90,
     ChartStyle? style,
     this.timeLabel,
     this.priceLabel,
@@ -66,6 +73,8 @@ class InteractiveChart extends StatefulWidget {
   })  : this.style = style ?? const ChartStyle(),
         assert(candles.length >= 3,
             "InteractiveChart requires 3 or more CandleData"),
+        assert(initialVisibleCandleCount >= 3,
+            "initialVisibleCandleCount must be more 3 or more"),
         super(key: key);
 
   @override
@@ -264,8 +273,12 @@ class _InteractiveChartState extends State<InteractiveChart> {
         _getMaxStartOffset(w, _candleWidth),
       );
     } else {
-      // Default 90 day chart. If data is shorter, we use the whole range.
-      final count = min(widget.candles.length, 90);
+      // Default zoom level. Defaults to a 90 day chart, but configurable.
+      // If data is shorter, we use the whole range.
+      final count = min(
+        widget.candles.length,
+        widget.initialVisibleCandleCount,
+      );
       _candleWidth = w / count;
       // Default show the latest available data, e.g. the most recent 90 days.
       _startOffset = (widget.candles.length - count) * _candleWidth;
