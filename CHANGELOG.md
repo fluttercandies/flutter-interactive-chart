@@ -1,10 +1,14 @@
+## 0.3.2
+
+* Add `initialVisibleCandleCount` parameter for setting a default zoom level. [(Issue #6)](https://github.com/fluttercandies/flutter-interactive-chart/issues/6)
+
 ## 0.3.1
 
-* Allow web and desktop users to zoom the chart with mouse scroll wheel.
+* Allow web and desktop users to zoom the chart with mouse scroll wheel. [(Issue #5)](https://github.com/fluttercandies/flutter-interactive-chart/issues/5)
 
 ## 0.3.0
 
-* BREAKING: Add support for multiple trend lines.
+* BREAKING: Add support for multiple trend lines. [(Issue #2)](https://github.com/fluttercandies/flutter-interactive-chart/issues/2)
 * The old `trend` property is changed to `trends`, to support multiple data points per `CandleData`.
 * The old `trendLineColor` property is changed to `trendLineStyles`.
 * The `CandleData.computeMA` helper function no longer modifies data in-place. To migrate,
