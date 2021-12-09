@@ -212,8 +212,7 @@ class _InteractiveChartState extends State<InteractiveChart> {
             }),
             onTapCancel: () => setState(() => _tapPosition = null),
             onTapUp: (_) {
-              // Fire callback event (if onTap() is available)
-              // call _fireOnTapEvent() before assigning null on _tapPosition
+              // Fire callback event and reset _tapPosition
               if (widget.onTap != null) _fireOnTapEvent();
               setState(() => _tapPosition = null);
             },
