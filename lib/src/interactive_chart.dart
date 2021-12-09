@@ -212,9 +212,10 @@ class _InteractiveChartState extends State<InteractiveChart> {
             }),
             onTapCancel: () => setState(() => _tapPosition = null),
             onTapUp: (_) {
-              setState(() => _tapPosition = null);
-              // Fire callback event (if needed)
+              // Fire callback event (if onTap() is available)
+              // call _fireOnTapEvent() before assigning null on _tapPosition
               if (widget.onTap != null) _fireOnTapEvent();
+              setState(() => _tapPosition = null);
             },
             // Pan and zoom
             onScaleStart: (details) => _onScaleStart(details.localFocalPoint),
