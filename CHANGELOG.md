@@ -8,7 +8,7 @@
 
 ## 0.3.1
 
-* Allow web and desktop users to zoom the chart with mouse scroll wheel. [(Issue #5)](https://github.com/fluttercandies/flutter-interactive-chart/issues/5)
+* Allow web and desktop users to zoom the chart with mouse scroll wheel. [(Issue #4)](https://github.com/fluttercandies/flutter-interactive-chart/issues/4)
 
 ## 0.3.0
 
