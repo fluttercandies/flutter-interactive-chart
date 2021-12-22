@@ -59,6 +59,22 @@ class PainterParams {
   double fitVolume(double y) {
     final gap = 12; // the gap between price bars and volume bars
     final baseAmount = 2; // display at least "something" for the lowest volume
+
+    if (maxVol == minVol) {
+      // Apparently max and min values (in the current visible range, at least)
+      // are the same. It's likely they passed in a bunch of zeroes, because
+      // they don't have real volume data or don't want to draw volumes.
+      assert(() {
+        if (style.volumeHeightFactor != 0) {
+          print('If you do not want to show volumes, '
+              'make sure to set `volumeHeightFactor` (ChartStyle) to zero.');
+        }
+        return true;
+      }());
+      // Since they are equal, we just draw all volume bars as half height.
+      return priceHeight + volumeHeight / 2;
+    }
+
     final volGridSize = (volumeHeight - baseAmount - gap) / (maxVol - minVol);
     final vol = (y - minVol) * volGridSize;
     return volumeHeight - vol + priceHeight - baseAmount;

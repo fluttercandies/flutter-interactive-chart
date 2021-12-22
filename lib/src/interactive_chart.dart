@@ -150,10 +150,14 @@ class _InteractiveChartState extends State<InteractiveChart> {
             candlesInRange.map(highest).whereType<double>().reduce(max);
         final minPrice =
             candlesInRange.map(lowest).whereType<double>().reduce(min);
-        final maxVol =
-            candlesInRange.map((c) => c.volume).whereType<double>().reduce(max);
-        final minVol =
-            candlesInRange.map((c) => c.volume).whereType<double>().reduce(min);
+        final maxVol = candlesInRange
+            .map((c) => c.volume)
+            .whereType<double>()
+            .fold(double.negativeInfinity, max);
+        final minVol = candlesInRange
+            .map((c) => c.volume)
+            .whereType<double>()
+            .fold(double.infinity, min);
 
         final child = TweenAnimationBuilder(
           tween: PainterParamsTween(

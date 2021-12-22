@@ -76,6 +76,7 @@ class _MyAppState extends State<MyApp> {
             //   overlayBackgroundColor: Colors.red[900]!.withOpacity(0.6),
             //   overlayTextStyle: TextStyle(color: Colors.red[100]),
             //   timeLabelHeight: 32,
+            //   volumeHeightFactor: 0.2, // volume area is 20% of total height
             // ),
             /** Customize axis labels */
             // timeLabel: (timestamp, visibleDataCount) => "📅",
