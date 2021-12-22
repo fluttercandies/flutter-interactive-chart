@@ -1,3 +1,7 @@
+## 0.3.4
+
+* Fix a potential crash if volume numbers are null.
+
 ## 0.3.3
 
 * Fix an issue where `onTap` event was not firing. [(Issue #8)](https://github.com/fluttercandies/flutter-interactive-chart/issues/8)
