@@ -1,3 +1,7 @@
+## 0.3.5
+
+* Update dependency: intl to ^0.19.0.
+
 ## 0.3.4
 
 * Fix a potential crash if volume numbers are null.
