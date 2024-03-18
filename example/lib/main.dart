@@ -91,7 +91,7 @@ class _MyAppState extends State<MyApp> {
             //   "Lo": "${candle.low?.toStringAsFixed(2)}",
             // },
             /** Callbacks */
-            // onTap: (candle) => print("user tapped on $candle"),
+            // onTap: (candle, candleIndex, price) => print("user tapped on $candle at \$$price"),
             // onCandleResize: (width) => print("each candle is $width wide"),
           ),
         ),

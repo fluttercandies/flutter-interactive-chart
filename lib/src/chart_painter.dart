@@ -206,6 +206,28 @@ class ChartPainter extends CustomPainter {
           ..strokeWidth = max(params.candleWidth * 0.88, 1.0)
           ..color = params.style.selectionHighlightColor);
     canvas.restore();
+    // Draw price line
+    canvas.drawLine(
+        Offset(0, pos.dy),
+        Offset(params.chartWidth, pos.dy),
+        Paint()
+          ..strokeWidth = 1
+          ..color = params.style.selectionHighlightColor);
+    // Draw price label
+    final priceTp = TextPainter(
+      text: TextSpan(
+        text: getPriceLabel(params.getPriceFromOffset(pos.dy)),
+        style: params.style.priceLabelStyle,
+      ),
+    )
+      ..textDirection = TextDirection.ltr
+      ..layout();
+    priceTp.paint(
+        canvas,
+        Offset(
+          params.chartWidth + 4,
+          pos.dy - priceTp.height / 2,
+        ));
     // Draw info pane
     _drawTapInfoOverlay(canvas, params, candle);
   }

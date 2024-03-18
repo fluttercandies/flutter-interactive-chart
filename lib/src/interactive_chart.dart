@@ -53,7 +53,7 @@ class InteractiveChart extends StatefulWidget {
   final OverlayInfoGetter? overlayInfo;
 
   /// An optional event, fired when the user clicks on a candlestick.
-  final ValueChanged<CandleData>? onTap;
+  final void Function(CandleData, int, double)? onTap;
 
   /// An optional event, fired when user zooms in/out.
   ///
@@ -338,9 +338,11 @@ class _InteractiveChartState extends State<InteractiveChart> {
     if (_prevParams == null || _tapPosition == null) return;
     final params = _prevParams!;
     final dx = _tapPosition!.dx;
+    final dy = _tapPosition!.dy;
     final selected = params.getCandleIndexFromOffset(dx);
     final candle = params.candles[selected];
-    widget.onTap?.call(candle);
+    final price = params.getPriceFromOffset(dy);
+    widget.onTap?.call(candle, selected, price);
   }
 }
 
