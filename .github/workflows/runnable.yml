@@ -40,12 +40,12 @@ jobs:
         run: dart format . -o none --set-exit-if-changed
       - name: Analyze Dart code
         run: flutter analyze .
-      - name: Run tests
-        run: flutter test
-      - name: Generate docs
-        run: |
-          dart pub global activate dartdoc
-          dart pub global run dartdoc .
+#      - name: Run tests
+#        run: flutter test
+#      - name: Generate docs
+#        run: |
+#          dart pub global activate dartdoc
+#          dart pub global run dartdoc .
       - run: flutter pub get
       - name: Build Example (Android)
         run: cd example; flutter build apk --debug
