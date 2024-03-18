@@ -4,16 +4,18 @@ import 'package:interactive_chart/interactive_chart.dart';
 import 'mock_data.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatefulWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
-  _MyAppState createState() => _MyAppState();
+  State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
-  List<CandleData> _data = MockDataTesla.candles;
+  final List<CandleData> _data = MockDataTesla.candles;
   bool _darkMode = true;
   bool _showAverage = false;
 
@@ -26,7 +28,7 @@ class _MyAppState extends State<MyApp> {
       ),
       home: Scaffold(
         appBar: AppBar(
-          title: Text("Interactive Chart Demo"),
+          title: const Text("Interactive Chart Demo"),
           actions: [
             IconButton(
               icon: Icon(_darkMode ? Icons.dark_mode : Icons.light_mode),
