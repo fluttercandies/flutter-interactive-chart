@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
+import 'package:interactive_chart/src/x_axis_offset_details.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'candle_data.dart';
@@ -60,6 +61,11 @@ class InteractiveChart extends StatefulWidget {
   /// This provides the width of a candlestick at the current zoom level.
   final ValueChanged<double>? onCandleResize;
 
+  /// Optional event fired when the user moves the chart along the X axis.
+  ///
+  /// Provides X-axis offset details.
+  final ValueChanged<XAxisOffsetDetails>? onXOffsetChanged;
+
   const InteractiveChart({
     Key? key,
     required this.candles,
@@ -70,6 +76,7 @@ class InteractiveChart extends StatefulWidget {
     this.overlayInfo,
     this.onTap,
     this.onCandleResize,
+    this.onXOffsetChanged,
   })  : this.style = style ?? const ChartStyle(),
         assert(candles.length >= 3,
             "InteractiveChart requires 3 or more CandleData"),
@@ -252,7 +259,8 @@ class _InteractiveChartState extends State<InteractiveChart> {
     final zoomAdjustment = (currCount - prevCount) * candleWidth;
     final focalPointFactor = focalPoint.dx / w;
     startOffset -= zoomAdjustment * focalPointFactor;
-    startOffset = startOffset.clamp(0, _getMaxStartOffset(w, candleWidth));
+    final maxStartOffset = _getMaxStartOffset(w, candleWidth);
+    startOffset = startOffset.clamp(0, maxStartOffset);
     // Fire candle width resize event
     if (candleWidth != _candleWidth) {
       widget.onCandleResize?.call(candleWidth);
@@ -262,6 +270,13 @@ class _InteractiveChartState extends State<InteractiveChart> {
       _candleWidth = candleWidth;
       _startOffset = startOffset;
     });
+
+    if (_prevStartOffset != startOffset) {
+      widget.onXOffsetChanged?.call(XAxisOffsetDetails(
+        offset: startOffset,
+        maxOffset: maxStartOffset,
+      ));
+    }
   }
 
   _handleResize(double w) {
