@@ -103,6 +103,10 @@ class PainterParams {
   bool shouldRepaint(PainterParams other) {
     if (candles.length != other.candles.length) return true;
 
+    if (other.candles.isNotEmpty &&
+        candles.isNotEmpty &&
+        other.candles.last != candles.last) return true;
+
     if (size != other.size ||
         candleWidth != other.candleWidth ||
         startOffset != other.startOffset ||
