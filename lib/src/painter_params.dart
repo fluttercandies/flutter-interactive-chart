@@ -6,6 +6,7 @@ import 'candle_data.dart';
 
 class PainterParams {
   final List<CandleData> candles;
+  final double? currentPrice;
   final ChartStyle style;
   final Size size;
   final double candleWidth;
@@ -35,6 +36,7 @@ class PainterParams {
     required this.tapPosition,
     required this.leadingTrends,
     required this.trailingTrends,
+    this.currentPrice,
   });
 
   double get chartWidth => // width without price labels
@@ -84,28 +86,27 @@ class PainterParams {
     double lerpField(double getField(PainterParams p)) =>
         lerpDouble(getField(a), getField(b), t)!;
     return PainterParams(
-      candles: b.candles,
-      style: b.style,
-      size: b.size,
-      candleWidth: b.candleWidth,
-      startOffset: b.startOffset,
-      maxPrice: lerpField((p) => p.maxPrice),
-      minPrice: lerpField((p) => p.minPrice),
-      maxVol: lerpField((p) => p.maxVol),
-      minVol: lerpField((p) => p.minVol),
-      xShift: b.xShift,
-      tapPosition: b.tapPosition,
-      leadingTrends: b.leadingTrends,
-      trailingTrends: b.trailingTrends,
-    );
+        candles: b.candles,
+        style: b.style,
+        size: b.size,
+        candleWidth: b.candleWidth,
+        startOffset: b.startOffset,
+        maxPrice: lerpField((p) => p.maxPrice),
+        minPrice: lerpField((p) => p.minPrice),
+        maxVol: lerpField((p) => p.maxVol),
+        minVol: lerpField((p) => p.minVol),
+        xShift: b.xShift,
+        tapPosition: b.tapPosition,
+        leadingTrends: b.leadingTrends,
+        trailingTrends: b.trailingTrends,
+        currentPrice:
+            b.currentPrice != null ? lerpField((p) => p.currentPrice!) : null);
   }
 
   bool shouldRepaint(PainterParams other) {
     if (candles.length != other.candles.length) return true;
 
-    if (other.candles.isNotEmpty &&
-        candles.isNotEmpty &&
-        other.candles.last != candles.last) return true;
+    if (other.currentPrice != currentPrice) return true;
 
     if (size != other.size ||
         candleWidth != other.candleWidth ||
