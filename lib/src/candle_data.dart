@@ -72,5 +72,28 @@ class CandleData {
   }
 
   @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CandleData &&
+          runtimeType == other.runtimeType &&
+          timestamp == other.timestamp &&
+          open == other.open &&
+          high == other.high &&
+          low == other.low &&
+          close == other.close &&
+          volume == other.volume &&
+          trends == other.trends;
+
+  @override
+  int get hashCode =>
+      timestamp.hashCode ^
+      open.hashCode ^
+      high.hashCode ^
+      low.hashCode ^
+      close.hashCode ^
+      volume.hashCode ^
+      trends.hashCode;
+
+  @override
   String toString() => "<CandleData ($timestamp: $close)>";
 }

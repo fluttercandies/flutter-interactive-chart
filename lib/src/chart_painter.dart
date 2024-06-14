@@ -27,6 +27,8 @@ class ChartPainter extends CustomPainter {
     // Draw time labels (dates) & price labels
     _drawTimeLabels(canvas, params);
     _drawPriceGridAndLabels(canvas, params);
+    _drawCurrentPriceLabel(canvas, params);
+    _drawCurrentPriceLine(canvas, params);
 
     // Draw prices, volumes & trend line
     canvas.save();
@@ -105,6 +107,67 @@ class ChartPainter extends CustomPainter {
             params.fitPrice(y) - priceTp.height / 2,
           ));
     });
+  }
+
+  void _drawCurrentPriceLabel(
+    Canvas canvas,
+    PainterParams params,
+  ) {
+    final currentPrice = params.currentPrice;
+    if (currentPrice == null) {
+      return;
+    }
+    final priceTp = TextPainter(
+      text: TextSpan(
+        text: getPriceLabel(currentPrice),
+        style: params.style.currentPriceStyle
+            .labelStyle,
+      ),
+    )
+      ..textDirection = TextDirection.ltr
+      ..layout();
+
+    final dx = params.chartWidth + 4;
+    final dy =
+        params.fitPrice(currentPrice).clamp(0, params.chartHeight).toDouble() -
+            priceTp.height / 2;
+
+
+    final padding = params.style.currentPriceStyle.rectPadding;
+    final radius = params.style.currentPriceStyle.rectRadius;
+    final rectColor = params.style.currentPriceStyle.rectColor;
+
+    final rect = Rect.fromLTWH(
+        dx, dy, priceTp.width + 2 * padding, priceTp.height + 2 * padding);
+    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(radius));
+    canvas.drawRRect(rrect, Paint()..color = rectColor);
+
+    priceTp.paint(canvas, Offset(dx + padding, dy + padding));
+  }
+
+  void _drawCurrentPriceLine(Canvas canvas, PainterParams params) {
+    final currentPrice = params.currentPrice;
+    if (currentPrice == null) {
+      return;
+    }
+    final paint = Paint()
+      ..color = Colors.red
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+
+    final dashWidth = 4.0;
+    final dashSpace = 2.0;
+    double startX = 0;
+    final clampedPrice =
+        params.fitPrice(currentPrice).clamp(0, params.chartHeight).toDouble();
+    while (startX < params.chartWidth) {
+      canvas.drawLine(
+        Offset(startX, clampedPrice),
+        Offset(startX + dashWidth, clampedPrice),
+        paint,
+      );
+      startX += dashWidth + dashSpace;
+    }
   }
 
   void _drawSingleDay(canvas, PainterParams params, int i) {
