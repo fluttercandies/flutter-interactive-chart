@@ -53,6 +53,9 @@ class PainterParams {
     return i;
   }
 
+  double getPriceFromOffset(double y) =>
+      (priceHeight - y) / priceHeight * (maxPrice - minPrice) + minPrice;
+
   double fitPrice(double y) =>
       priceHeight * (maxPrice - y) / (maxPrice - minPrice);
 
