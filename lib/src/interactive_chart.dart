@@ -101,6 +101,16 @@ class _InteractiveChartState extends State<InteractiveChart> {
   PainterParams? _prevParams; // used in onTapUp event
 
   @override
+  void didUpdateWidget(covariant InteractiveChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.candles.length < widget.candles.length) {
+      // Change offset to show the latest candle when new data is added
+      _startOffset =
+          max(0, widget.candles.length * _candleWidth - _prevChartWidth!);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
