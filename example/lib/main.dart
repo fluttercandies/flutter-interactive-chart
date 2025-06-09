@@ -99,7 +99,7 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  _computeTrendLines() {
+  void _computeTrendLines() {
     final ma7 = CandleData.computeMA(_data, 7);
     final ma30 = CandleData.computeMA(_data, 30);
     final ma90 = CandleData.computeMA(_data, 90);
@@ -109,7 +109,7 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
-  _removeTrendLines() {
+  void _removeTrendLines() {
     for (final data in _data) {
       data.trends = [];
     }
