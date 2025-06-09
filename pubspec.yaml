@@ -10,7 +10,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  intl: ">=0.17.0 <0.20.0"
+  intl: ">=0.17.0 <0.21.0"
 
 dev_dependencies:
   flutter_lints:
