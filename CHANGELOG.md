@@ -1,3 +1,7 @@
+## 0.3.6
+
+* Update dependency: intl to ^0.20.0.
+
 ## 0.3.5
 
 * Update dependency: intl to ^0.19.0.
