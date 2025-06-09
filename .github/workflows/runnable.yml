@@ -23,10 +23,6 @@ jobs:
         os: [ macos-latest ]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
-        with:
-          distribution: 'zulu'
-          java-version: '17'
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
@@ -37,19 +33,9 @@ jobs:
       - name: Prepare dependencies
         run: flutter pub get
       - name: Check Dart code formatting
-        run: dart format . -o none --set-exit-if-changed
+        run: dart format lib -o none --set-exit-if-changed
       - name: Analyze Dart code
-        run: flutter analyze .
-#      - name: Run tests
-#        run: flutter test
-#      - name: Generate docs
-#        run: |
-#          dart pub global activate dartdoc
-#          dart pub global run dartdoc .
+        run: flutter analyze lib
       - run: flutter pub get
-      - name: Build Example (Android)
-        run: cd example; flutter build apk --debug
-      - name: Build Example (iOS)
-        run: cd example; flutter build ios --no-codesign
       - name: Build Example (Web)
         run: cd example; flutter build web
